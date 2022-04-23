@@ -1,14 +1,15 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static unsigned int borderpx  = 1;        /* border pixel of windows */
-static unsigned int gappx     = 5;        /* gaps between windows */
-static unsigned int snap      = 32;       /* snap pixel */
-static int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
-static int showbar            = 1;        /* 0 means no bar */
-static int topbar             = 1;        /* 0 means bottom bar */
-static char font[]            = "monospace:size=10";
-static char dmenufont[]       = "monospace:size=10";
+static unsigned int borderpx        = 1;        /* border pixel of windows */
+static unsigned int gappx           = 5;        /* gaps between windows */
+static unsigned int snap            = 32;       /* snap pixel */
+static int swallowfloating          = 0;        /* 1 means swallow floating windows by default */
+static int showbar                  = 1;        /* 0 means no bar */
+static int topbar                   = 1;        /* 0 means bottom bar */
+static char font[]                  = "monospace:size=10";
+static char symbols[]               = "monospace:size=10";
+static char dmenufont[]             = "monospace:size=10";
 static const char *fonts[]          = { font };
 static char normbgcolor[]           = "#222222";
 static char normbordercolor[]       = "#444444";
@@ -31,10 +32,11 @@ static const Rule rules[] = {
 	 *	WM_NAME(STRING) = title
 	 */
 	/* class     instance  title           tags mask  iscentered  isfloating  isterminal  noswallow  monitor */
-	{ "Gimp",    NULL,     NULL,           0,         0,          1,          0,           0,        -1 },
-	{ "Firefox", NULL,     NULL,           1 << 8,    0,          0,          0,          -1,        -1 },
-	{ "St",      NULL,     NULL,           0,         0,          0,          1,           0,        -1 },
-	{ NULL,      NULL,     "Event Tester", 0,         0,          0,          0,           1,        -1 }, /* xev */
+//  { "Gimp",    NULL,     NULL,           0,         0,          1,          0,           0,        -1 },
+//  { "Firefox", NULL,     NULL,           1 << 8,    0,          0,          0,          -1,        -1 },
+	{ "St",      NULL,     NULL,           0,         0,          0,          1,          -1,        -1 },
+	{ "floating",NULL,     NULL,           0,         1,          1,          1,          -1,        -1 },
+	{ NULL,      NULL,     "Event Tester", 0,         0,          1,          0,           1,        -1 }, /* xev */
 };
 
 /* layout(s) */
@@ -51,7 +53,7 @@ static const Layout layouts[] = {
 };
 
 /* key definitions */
-#define MODKEY Mod1Mask
+#define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
@@ -63,7 +65,7 @@ static const Layout layouts[] = {
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbordercolor, "-sf", selfgcolor, NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-p", "run:", NULL };
 static const char *termcmd[]  = { "st", NULL };
 
 /*
@@ -71,59 +73,61 @@ static const char *termcmd[]  = { "st", NULL };
  */
 ResourcePref resources[] = {
 		{ "font",               STRING,  &font },
+		{ "symbols",            STRING,  &symbols },
 		{ "dmenufont",          STRING,  &dmenufont },
-		{ "normbgcolor",        STRING,  &normbgcolor },
-		{ "normbordercolor",    STRING,  &normbordercolor },
-		{ "normfgcolor",        STRING,  &normfgcolor },
-		{ "selbgcolor",         STRING,  &selbgcolor },
-		{ "selbordercolor",     STRING,  &selbordercolor },
-		{ "selfgcolor",         STRING,  &selfgcolor },
+		{ "background",         STRING,  &normbgcolor },
+		{ "background",         STRING,  &normbordercolor },
+		{ "normforeground",     STRING,  &normfgcolor },
+		{ "selbackground",      STRING,  &selbgcolor },
+		{ "color2",             STRING,  &selbordercolor },
+		{ "selforeground",      STRING,  &selfgcolor },
 		{ "borderpx",          	INTEGER, &borderpx },
-		{ "snap",          		INTEGER, &snap },
-		{ "showbar",          	INTEGER, &showbar },
-		{ "topbar",          	INTEGER, &topbar },
-		{ "nmaster",          	INTEGER, &nmaster },
-		{ "resizehints",       	INTEGER, &resizehints },
-		{ "mfact",      	 	FLOAT,   &mfact },
+		{ "gappx",              INTEGER, &gappx },
+		{ "snap",               INTEGER, &snap },
+		{ "showbar",            INTEGER, &showbar },
+		{ "topbar",             INTEGER, &topbar },
+		{ "nmaster",            INTEGER, &nmaster },
+		{ "resizehints",        INTEGER, &resizehints },
+		{ "mfact",              FLOAT,   &mfact },
 };
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
-	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+	// { MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
+	// { MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
-	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
-	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
+	{ MODKEY,                       XK_o,      incnmaster,     {.i = +1 } },
+	{ MODKEY,                       XK_i,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
-	{ MODKEY,                       XK_Return, zoom,           {0} },
+	{ MODKEY,                       XK_space,  zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
+	{ MODKEY,                       XK_q,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
-	{ MODKEY,                       XK_space,  setlayout,      {0} },
+	// { MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
-	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
-	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
+	{ MODKEY,                       XK_agrave, view,           {.ui = ~0 } },
+	{ MODKEY|ShiftMask,             XK_agrave, tag,            {.ui = ~0 } },
 	{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
 	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
-	{ MODKEY,                       XK_minus,  setgaps,        {.i = -1 } },
-	{ MODKEY,                       XK_equal,  setgaps,        {.i = +1 } },
+	{ MODKEY,                       XK_less,   setgaps,        {.i = -1 } },
+	{ MODKEY|ShiftMask,             XK_less,  setgaps,        {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_equal,  setgaps,        {.i = 0  } },
-	TAGKEYS(                        XK_1,                      0)
-	TAGKEYS(                        XK_2,                      1)
-	TAGKEYS(                        XK_3,                      2)
-	TAGKEYS(                        XK_4,                      3)
-	TAGKEYS(                        XK_5,                      4)
-	TAGKEYS(                        XK_6,                      5)
-	TAGKEYS(                        XK_7,                      6)
-	TAGKEYS(                        XK_8,                      7)
-	TAGKEYS(                        XK_9,                      8)
+	TAGKEYS(                        XK_ampersand,              0)
+	TAGKEYS(                        XK_eacute,                 1)
+	TAGKEYS(                        XK_quotedbl,               2)
+	TAGKEYS(                        XK_apostrophe,             3)
+	TAGKEYS(                        XK_parenleft,              4)
+	TAGKEYS(                        XK_minus,                  5)
+	TAGKEYS(                        XK_egrave,                 6)
+	TAGKEYS(                        XK_underscore,             7)
+	TAGKEYS(                        XK_ccedilla,               8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
 };
 
